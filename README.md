@@ -2,14 +2,12 @@
 
 Central CI and tooling configuration for Genesis SE School Go projects. Provides:
 
-- GitHub Actions CI workflow (runs automatically in student projects)
+- GitHub Actions CI workflow (runs automatically in projects)
 - golangci-lint configuration with curated rules for Go best practices
 
 All job definitions live in this repo. When a job is added or updated here, it runs in every project on the next push — no changes needed on your side.
 
----
-
-## Student setup
+## Setup
 
 ### Prerequisites
 
@@ -68,8 +66,6 @@ git push
 
 GitHub Actions will now run CI on every push and pull request.
 
----
-
 ## Local development tasks
 
 After setup, the following tasks are available in your project:
@@ -79,8 +75,6 @@ After setup, the following tasks are available in your project:
 | `task ops:lint` | Run golangci-lint |
 | `task ops:lint:fix` | Run golangci-lint with auto-fix |
 | `task ops:lint:install` | Install latest golangci-lint |
-
----
 
 ## Updating
 
