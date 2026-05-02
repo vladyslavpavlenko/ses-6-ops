@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Download linter config
+        run: curl -sSfL -o .golangci.yaml https://raw.githubusercontent.com/vladyslavpavlenko/ses-6-ops/main/.golangci.yaml
+
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest

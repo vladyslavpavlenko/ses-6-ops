@@ -1,0 +1,27 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  verify:
+    desc: Verify golangci-lint configuration
+    cmds:
+      - golangci-lint config verify
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run --config {{.TASKFILE_DIR}}/.golangci.yaml ./...
+
+  lint:fix:
+    desc: Run golangci-lint with auto-fix
+    cmds:
+      - golangci-lint run --fix --config {{.TASKFILE_DIR}}/.golangci.yaml ./...
+
+  lint:install:
+    desc: Install latest golangci-lint
+    cmds:
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin latest

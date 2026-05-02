@@ -1,0 +1,23 @@
+name: verify
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- latest
+          echo "$PWD/bin" >> $GITHUB_PATH
+
+      - name: Verify configuration
+        run: golangci-lint config verify
