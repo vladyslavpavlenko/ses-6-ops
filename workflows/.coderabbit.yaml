@@ -1,0 +1,84 @@
+language: "en-US"
+tone_instructions: "Be concise, constructive, and educational. This is a school project environment — explain the why behind suggestions."
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_filters:
+    - "!vendor/**"
+    - "!docs/**"
+    - "!examples/**"
+    - "!third_party/**"
+    - "!builtin/**"
+
+  path_instructions:
+    - path: "**/*.go"
+      instructions: |
+        Review Go code with the following priorities:
+
+        Error handling:
+        - All errors must be checked (errcheck: check-type-assertions and check-blank are enabled)
+        - Prefer errors.New over fmt.Errorf when there is no formatting (use-errors-new rule)
+        - Error strings must not be capitalized or end with punctuation (error-strings rule)
+        - Error return values should be the last return value (error-return rule)
+
+        Formatting and style:
+        - Line length must not exceed 110 characters (line-length-limit)
+        - No naked returns (nakedret)
+        - No unused parameters (unparam)
+        - No unused variables or exports (unused)
+        - No unnecessary type conversions (unconvert)
+        - Avoid magic numbers; use named constants (mnd)
+        - No init() functions (gochecknoinits)
+
+        Complexity:
+        - Cyclomatic complexity must stay below 25 (gocyclo, min-complexity: 25)
+        - Cognitive complexity is also tracked (gocognit)
+        - Functions must return at most 3 values (function-result-limit)
+
+        Context and concurrency:
+        - HTTP handlers must propagate context.Context (noctx)
+        - Watch for shadowed variables, especially "err" (govet: shadow — note: shadowing of "err" is explicitly excluded)
+        - Check for nil pointer dereferences (govet: nilness)
+        - Check for writes to unused variables (govet: unusedwrite)
+
+        Security:
+        - Flag any potential security issues (gosec)
+        - Forbidden calls: fmt.Print*, log.Print*, print*, spew.Dump (forbidigo)
+
+        Code quality:
+        - Flag duplicate code blocks over 200 tokens (dupl, threshold: 200)
+        - Prefer pre-allocated slices where the length is known (prealloc)
+        - Interface return types must be intentional (ireturn)
+        - No predeclared identifier shadowing (predeclared)
+        - Lint directives must be specific and necessary (nolintlint)
+        - Use ++ / -- instead of += 1 / -= 1 (increment-decrement)
+        - No superfluous else after return/break/continue (superfluous-else)
+        - Avoid dogsled (blank identifier assignments with multiple return values)
+
+        Naming:
+        - Exported names must have comments
+        - Receiver names must be consistent (receiver-naming)
+        - No redundant import aliases (redundant-import-alias)
+        - No redefining builtins (redefines-builtin-id)
+        - Use time.Equal for time comparisons, not == (time-equal)
+        - Follow time type naming conventions (time-naming)
+        - Unexported names must not leak in exported APIs (unexported-return, unexported-naming)
+        - Filenames must follow Go conventions (filename-format)
+        - Variable naming must follow Go conventions (var-naming)
+
+        Tests:
+        - Test files are excluded from linting (tests: false in golangci config)
+        - Test packages should be separate _test packages (testpackage)
+
+chat:
+  auto_reply: true
