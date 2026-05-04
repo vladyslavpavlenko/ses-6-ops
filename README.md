@@ -81,13 +81,49 @@ No additional configuration is needed — `.coderabbit.yaml` is already in your 
 
 ## CodeRabbit
 
-[CodeRabbit](https://coderabbit.ai) is an AI code reviewer that comments on pull requests. The `.coderabbit.yaml` config distributed by this repo is tuned for Go projects and mirrors the rules enforced by `.golangci.yaml`:
+[CodeRabbit](https://coderabbit.ai) is an AI code reviewer that comments on pull requests. After running `task ops:setup`, you'll find `.coderabbit.yaml` in your project root.
 
-- Reviews error handling, complexity, naming, security, and formatting
-- Skips generated and vendored code
-- Uses an assertive profile — expect detailed, educational feedback
+### What the template covers
 
-To update your CodeRabbit config, re-run `task ops:setup`.
+The distributed `.coderabbit.yaml` is a **template** tuned for Go projects:
+
+- **Tools enabled**: golangci-lint, hadolint, gitleaks, actionlint, yamllint, markdownlint, shellcheck
+- **Layer-specific reviews** for `cmd/`, `internal/api/`, `internal/service/`, `internal/repository/`, `internal/client/`
+- **PostgreSQL migration** review rules (TIMESTAMPTZ, partial unique indexes, etc.)
+- **Test review** rules (testcontainers-go, mocking via interfaces, soft-delete checks)
+- **Dockerfile, docker-compose, Makefile, .env.example** path-specific rules
+- **Auto-labeling** based on changed paths (database, api, security, infrastructure, etc.)
+- **Pre-merge checks** for PR title prefix and description sections
+
+### Customizing the template
+
+The template assumes a **clean architecture** with `internal/api`, `internal/service`, `internal/repository`, `internal/client` directories. If your project uses a different structure:
+
+1. Open `.coderabbit.yaml` in your project root
+2. Edit the `path_instructions` blocks to match your directory layout
+3. Remove rules that don't apply (e.g., scanner block if you have no background workers)
+4. Commit the changes
+
+The reference example tuned for the GitHub Release Notification API project lives in this ops repo as [`.coderabbit.project.yaml`](.coderabbit.project.yaml) — copy ideas from it.
+
+### Required GitHub setup
+
+CodeRabbit only reviews PRs that have the **`ready-for-review`** label. This avoids burning tokens on work-in-progress PRs.
+
+1. Install the CodeRabbit GitHub App: [github.com/apps/coderabbit-ai](https://github.com/apps/coderabbit-ai)
+2. Create the required labels on your repository — easiest via `gh`:
+
+   ```bash
+   for label in ready-for-review database api security breaking-change infrastructure tests documentation dependencies; do
+     gh label create "$label" 2>/dev/null
+   done
+   ```
+
+3. When your PR is ready, add the `ready-for-review` label to trigger the review
+
+### Updating
+
+Re-run `task ops:setup` at any time to pull the latest template. **Note**: this will overwrite your customizations in `.coderabbit.yaml`. Keep a local diff or branch if you've edited the template heavily.
 
 ## Local development tasks
 
