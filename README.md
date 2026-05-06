@@ -104,7 +104,7 @@ The template assumes a **clean architecture** with `internal/api`, `internal/ser
 3. Remove rules that don't apply (e.g., scanner block if you have no background workers)
 4. Commit the changes
 
-The reference example tuned for the GitHub Release Notification API project lives in this ops repo as [`.coderabbit.project.yaml`](.coderabbit.project.yaml) — copy ideas from it.
+The reference example tuned for the GitHub Release Notification API project lives in this ops repo as [`.coderabbit.project.yaml`](workflows/.coderabbit.project.yaml) — copy ideas from it.
 
 ### Required GitHub setup
 
