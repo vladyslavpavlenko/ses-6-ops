@@ -1,6 +1,11 @@
 language: en-US
-tone_instructions: Be concise and constructive. Focus on bugs, security issues, and significant design problems. This is an educational environment — when flagging an issue, briefly explain why it matters. Do not nitpick formatting or style that is already enforced by golangci-lint.
+tone_instructions: |
+  Be concise and constructive. Focus on bugs, security issues, and significant
+  design problems. When flagging an issue, briefly explain why it matters.
+  Do not nitpick formatting, naming, or complexity — those are enforced by
+  golangci-lint.
 early_access: false
+
 reviews:
   profile: assertive
   request_changes_workflow: false
@@ -13,234 +18,147 @@ reviews:
   sequence_diagrams: true
   assess_linked_issues: true
   related_prs: true
-  suggested_reviewers: false
-  auto_assign_reviewers: false
-  poem: false
-  in_progress_fortune: false
   abort_on_close: true
-  high_level_summary_in_walkthrough: false
   review_simple_changes: false
+
   tools:
-    golangci-lint:
-      enabled: true
-    hadolint:
-      enabled: true
-    gitleaks:
-      enabled: true
-    actionlint:
-      enabled: true
-    yamllint:
-      enabled: true
-    markdownlint:
-      enabled: true
-    shellcheck:
-      enabled: true
+    golangci-lint: { enabled: true }
+    gitleaks:      { enabled: true }
+    hadolint:      { enabled: true }
+    actionlint:    { enabled: true }
+    yamllint:      { enabled: true }
+    markdownlint:  { enabled: true }
+    shellcheck:    { enabled: true }
+
   auto_review:
     enabled: true
     auto_incremental_review: true
-    labels:
-    - ready-for-review
     drafts: false
-    base_branches:
-    - main
+    base_branches: [main]
+    labels: [ready-for-review]
+
   finishing_touches:
-    docstrings:
-      enabled: false
-    unit_tests:
-      enabled: true
+    docstrings:  { enabled: false }
+    unit_tests:  { enabled: true }
+
   pre_merge_checks:
     title:
       mode: warning
-      requirements: Must start with a type prefix (feat/fix/chore/refactor/docs/test) followed by colon and space
+      requirements: |
+        Must start with a type prefix (feat/fix/chore/refactor/docs/test)
+        followed by a colon and a space.
     description:
       mode: warning
-      requirements: Must include a Summary section describing what changed and why, and a Test plan section listing how the change was verified.
+      requirements: |
+        Must include a Summary section describing what changed and why,
+        and a Test plan section listing how the change was verified.
+
   path_filters:
-  - '!**/*.pb.go'
-  - '!**/*.pb.gw.go'
-  - '!**/*.mod'
-  - '!**/*.sum'
-  - '!**/vendor/**'
-  - '!**/.git/**'
-  - '!**/.ops/**'
-  - '!**/mocks/**'
-  - '!**/*_mock.go'
-  labeling_instructions:
-  - label: 'database'
-    instructions: 'Apply when files in migrations/ or internal/repository/ change.'
-  - label: 'api'
-    instructions: 'Apply when files in internal/api/ or swagger.yaml change.'
-  - label: 'security'
-    instructions: 'Apply when authentication, tokens, crypto, secrets handling, or .env.example changes.'
-  - label: 'breaking-change'
-    instructions: 'Apply when public API contracts in swagger.yaml or HTTP handler request/response shapes change.'
-  - label: 'infrastructure'
-    instructions: 'Apply when Dockerfile, docker-compose.yml, Makefile, or .github/workflows/ change.'
-  - label: 'tests'
-    instructions: 'Apply when only *_test.go files change (test-only PRs).'
-  - label: 'documentation'
-    instructions: 'Apply when only README.md or other markdown files change.'
-  - label: 'dependencies'
-    instructions: 'Apply when go.mod or go.sum change.'
+    - '!**/*.pb.go'
+    - '!**/*.pb.gw.go'
+    - '!**/*.mod'
+    - '!**/*.sum'
+    - '!**/vendor/**'
+    - '!**/.git/**'
+    - '!**/.ops/**'
+    - '!**/mocks/**'
+    - '!**/*_mock.go'
+
   path_instructions:
-  - path: '**/*.go'
-    instructions: "Baseline Go review — applies to all Go files. Layer-specific rules
-      below add focus, do not duplicate this list.\n\nError handling:\n- All errors
-      must be explicitly checked — no blank identifier assignments for errors\n- Wrap
-      errors with context using fmt.Errorf with %w when propagating\n- Prefer errors.New
-      over fmt.Errorf when there is no format string\n- Error strings must not be
-      capitalized or end with punctuation\n- Error return value should be the last
-      return value\n\nCorrectness and concurrency:\n- Check for potential nil pointer
-      dereferences\n- Check for data races in concurrent code\n- Verify goroutines
-      are not leaked — every goroutine must have a clear exit path tied to context
-      cancellation\n- Ensure context.Context is propagated through every layer\n-
-      Verify defer is used correctly (rows.Close, db.Close, response body close)\n\nSecurity:\n-
-      Flag hardcoded secrets, tokens, or credentials\n- Use crypto/rand (not math/rand)
-      for generating tokens\n- Avoid logging sensitive data (email addresses, API
-      keys, full request bodies)\n\nPerformance:\n- Flag unnecessary allocations in
-      hot paths\n- Prefer pre-allocated slices when length is known upfront\n- Avoid
-      unbounded caches or in-memory state that grows without limit\n\nNote: formatting,
-      naming, cyclomatic complexity, and lint rules are enforced automatically by
-      golangci-lint — do not duplicate those warnings."
-  - path: 'cmd/**/*.go'
-    instructions: 'Layer focus: application entry point and wiring. Verify configuration
-      is parsed once at startup and dependencies are injected downward (no global
-      state). Database migrations must run before serving traffic. Signal handling
-      (SIGINT, SIGTERM) must trigger graceful shutdown of the server, background scanner,
-      and database connections within a bounded timeout. Use signal.NotifyContext
-      to coordinate shutdown across goroutines. Every long-running goroutine started
-      in main must be awaited via WaitGroup or errgroup. Do not put business logic
-      in main.'
-  - path: 'internal/api/**/*.go'
-    instructions: 'Layer focus: HTTP handlers built on Chi router. Verify handlers
-      read context from r.Context() and propagate it. Validate user input (email,
-      repo name, token length) before passing to the service layer. Return correct
-      HTTP status codes — 400 for validation, 404 for not found, 409 for conflicts,
-      422 for semantic errors, 500 only for unexpected failures. Never leak internal
-      error details, stack traces, or SQL errors in HTTP responses. Use Chi route
-      patterns (chi.RouteContext) when emitting Prometheus metric labels to avoid
-      high-cardinality explosion from dynamic segments like tokens. Set explicit Content-Type
-      and limit request body with http.MaxBytesReader. Apply http.Server.ReadTimeout
-      and WriteTimeout. Do not perform database queries directly in handlers — delegate
-      to services.'
-  - path: 'internal/service/**/*.go'
-    instructions: 'Layer focus: business logic. Verify services depend on interfaces
-      (interfaces.go) not concrete types. Coordinate transactions explicitly when
-      multiple repository calls must be atomic — pass tx as a parameter, never share
-      a global *sql.Tx. Return domain-specific errors — do not leak repository errors
-      like sql.ErrNoRows. Validate business rules here, not in handlers (e.g., subscription
-      token expiry, duplicate detection). Background workers must respect context
-      cancellation, use bounded backoff, and never panic. Avoid direct SQL or HTTP
-      calls in services — delegate to repositories and clients via interfaces.'
-  - path: 'internal/repository/**/*.go'
-    instructions: 'Layer focus: database access. Verify only parameterized queries
-      are used. Wrap multi-statement operations in transactions with explicit rollback
-      on error via defer. Always use context-aware methods (QueryContext, ExecContext,
-      QueryRowContext). Close rows with defer rows.Close() and check rows.Err() after
-      iteration. Map sql.ErrNoRows to a domain not-found error. Do not put business
-      logic in repositories. Filter out soft-deleted records consistently. Avoid SELECT
-      * — fetch only needed columns.'
-  - path: 'internal/client/**/*.go,internal/cache/**/*.go,**/redis*.go'
-    instructions: 'Layer focus: external API clients (GitHub) and Redis cache decorator.
-      Verify HTTP timeouts via http.Client.Timeout and context-with-deadline on every
-      request. Implement retries with exponential backoff and jitter for transient
-      failures (5xx, network errors), but never retry on 4xx. Respect rate limits
-      — read X-RateLimit-Remaining and back off before exhaustion. Close response
-      bodies with defer. Cache decorator: failures must never break the request flow
-      — always fall back to the underlying client on Redis errors. Set explicit TTL
-      on every cached key (10 minutes is the project default). Avoid caching errors
-      or empty responses unless intentional. Keys must be prefixed and namespaced
-      (e.g., gh:releases:{owner}:{repo}). Use cache-aside (read-through), not write-through.
-      Never log API tokens or full response bodies.'
-  - path: '**/scanner*.go,**/scan*.go,**/service/scanner/**/*.go,**/worker*.go'
-    instructions: 'Layer focus: background workers and the release scanner. Verify
-      every ticker is created with time.NewTicker and stopped via defer ticker.Stop().
-      Every loop iteration checks ctx.Done() before doing work and returns immediately
-      on cancellation. Backoff between iterations is bounded — no tight infinite loops
-      on errors. errgroup or WaitGroup tracks concurrent fetch goroutines, with a
-      bounded worker pool to prevent unbounded fan-out. Errors per repository do not
-      abort the whole scan — log and continue. Scanner must be idempotent: restarting
-      mid-scan must not duplicate notifications. Database state (last_checked_at,
-      last_release_id) must be updated atomically with the notification dispatch.'
-  - path: '**/migrations/**/*.sql'
-    instructions: 'PostgreSQL migration files (golang-migrate format with .up.sql
-      and .down.sql pairs). Every up migration must have a corresponding down migration
-      that fully reverses it. Schema design: primary keys mandatory and must be BIGSERIAL
-      or UUID, never JSON/JSONB or TEXT. Use TIMESTAMP WITH TIME ZONE (TIMESTAMPTZ)
-      for created_at, updated_at, confirmed_at fields. Prefer JSONB over JSON. Service
-      columns: include id, created_at, updated_at; use confirmed_at or deleted_at
-      flags instead of hard deletes. Indexes: index foreign keys and frequently filtered
-      columns; use CREATE INDEX CONCURRENTLY. Partial unique indexes are preferred
-      over full unique constraints when business logic requires conditional uniqueness
-      (e.g., one active subscription per email per repository). Constraints: use CHECK
-      constraints for enums; avoid COALESCE inside unique constraints. Triggers: minimal
-      (auto-update updated_at is fine); no business logic. Do not use IF NOT EXISTS
-      in production migrations (it hides drift). Review every migration for data loss
-      risk.'
-  - path: '**/*_test.go'
-    instructions: 'Test review. Unit tests for service and repository layers should
-      mock external dependencies (GitHub client, SMTP, Redis) using interfaces from
-      interfaces.go. Integration tests using testcontainers-go must verify real PostgreSQL
-      behavior (migrations, FK constraints, partial unique indexes, cascade deletes,
-      triggers). Mutation testing: validate that create, update, and delete operations
-      affect only intended rows. Concurrency: identify data races, deadlocks, dirty
-      reads, especially in scanner tests. Cache tests must verify graceful degradation
-      when Redis is unavailable. HTTP handler tests must cover happy and error paths
-      (400, 404, 409, 500). Verify t.Parallel() where safe, t.Cleanup() for teardown,
-      consistent testify usage. Soft-delete: confirm queries filter deleted records
-      correctly. Flag missing critical scenarios.'
-  - path: '**/Dockerfile*'
-    instructions: 'Use multi-stage builds to keep the final image small. Pin base
-      image versions to specific tags or digests, not :latest. Run as a non-root user
-      in the final stage. Do not copy .env files or secrets into the image. Use COPY
-      instead of ADD unless extracting archives. Combine RUN commands where appropriate.
-      Use CGO_ENABLED=0 for static Go binaries when targeting scratch or distroless.
-      Set HEALTHCHECK or rely on orchestrator-level probes.'
-  - path: '**/docker-compose*.yml,**/docker-compose*.yaml'
-    instructions: 'Pin image versions for postgres and redis (no :latest). Use named
-      volumes for database persistence. Define explicit healthcheck blocks for postgres
-      and redis. Use depends_on with condition: service_healthy. Never commit secrets
-      — use environment files. Restrict published ports to localhost where possible.
-      Define a custom network instead of the default bridge.'
-  - path: '**/Makefile'
-    instructions: 'Targets must be declared .PHONY when they do not produce a file
-      matching the target name. Avoid hardcoded credentials, tokens, or environment-specific
-      values — read from environment variables. Use $(MAKE) for recursive invocation.
-      Quote variable expansions to handle paths with spaces. Provide a default `help`
-      target listing available commands. Group related targets (test, lint, build,
-      run, migrate). Each shell command in a recipe runs in its own shell — chain
-      with backslashes if needed.'
-  - path: '**/.env.example,**/.env.template,**/.env.sample'
-    instructions: 'Must contain ALL environment variables the application reads, with
-      placeholder values — never real credentials. Format: KEY=placeholder_value with
-      a brief comment above each variable. Group related variables (database, redis,
-      smtp, github). Sensitive keys must use obvious placeholders (CHANGE_ME, your_token_here).
-      Confirm .gitignore covers the real .env file.'
-  - path: '**/.github/workflows/*.yml,**/.github/workflows/*.yaml'
-    instructions: 'GitHub Actions workflows. Workflow triggers must be intentional
-      (push, pull_request, workflow_call). Pin third-party actions to a specific version
-      or commit SHA, never @latest. Use GitHub Secrets — no plaintext credentials.
-      Permissions blocks must follow least-privilege. Job dependencies (needs:) must
-      be correctly defined. Flag any step running untrusted input directly in shell
-      commands (injection risk).'
-  - path: '**/swagger.yaml,**/swagger.yml,**/openapi.yaml,**/openapi.yml'
-    instructions: 'OpenAPI/Swagger spec. Every endpoint must document all possible
-      response codes (200, 201, 400, 404, 409, 500). Request and response schemas
-      must match Go structs. Authentication requirements (API key) must be declared.
-      Path and query parameters must be typed and validated. Avoid leaking internal
-      field names. Examples must be realistic and contain no real secrets.'
+    - path: '**/*.go'
+      instructions: |
+        Baseline Go review.
+
+        Errors:
+        - Every error must be checked — no _ = ... for errors.
+        - Wrap with fmt.Errorf("...: %w", err) when adding context;
+          use errors.New when there is no format string.
+        - Error strings: lowercase, no trailing punctuation.
+        - The error must be the last return value.
+
+        Correctness and concurrency:
+        - Flag potential nil-pointer dereferences and data races.
+        - Every goroutine must have a clear exit tied to context cancellation.
+        - context.Context must be propagated through every layer.
+        - defer must be used for resources that need closing
+          (rows, response bodies, files, locks).
+
+        Security:
+        - Flag hardcoded secrets, tokens, or credentials.
+        - Use crypto/rand (not `math/rand`) for tokens or IDs.
+        - Do not log sensitive data — emails, API keys, full request bodies.
+
+        Contracts:
+        - Flag breaking changes in exported function signatures or interface definitions.
+        - Type assertions must use the two-value form (v, ok := x.(T)) — never the
+          single-value form that panics on mismatch.
+
+        Performance:
+        - Pre-allocate slices when length is known.
+        - Flag unbounded caches or in-memory state that grows without limit.
+
+        Do NOT duplicate warnings already produced by golangci-lint
+        (formatting, naming, cyclomatic complexity, ineffective assignments).
+
+    - path: '**/*_test.go'
+      instructions: |
+        Test review.
+        - Mock external dependencies through interfaces, not concrete types.
+        - Verify happy and error paths (validation, not-found, conflict, 5xx).
+        - Use t.Parallel() where safe and t.Cleanup() for teardown.
+        - Flag missing critical scenarios — concurrency, soft-delete filtering,
+          partial failure, cache fallback.
+        - For mutation tests, confirm only the intended row/field changed.
+        - Prefer table-driven tests for functions with multiple input/output combinations.
+
+    - path: '**/*.sql'
+      instructions: |
+        SQL / migration review.
+        - Primary keys mandatory; never JSON/JSONB or TEXT.
+        - Use TIMESTAMPTZ for timestamps; prefer JSONB over JSON.
+        - Index foreign keys and frequently filtered columns.
+        - Use CREATE INDEX CONCURRENTLY for online migrations.
+        - Avoid IF NOT EXISTS in production migrations — it hides drift.
+        - Every up migration must have a corresponding down migration.
+        - Prefer soft deletes (`deleted_at`) over hard deletes.
+        - Use CHECK constraints to enforce enum-like columns instead of free-form TEXT.
+        - Review for data-loss risk on every column drop or type change.
+
+    - path: '**/proto/**'
+      instructions: |
+        Protobuf review.
+        - Stable versioning (v1, v2) for production APIs.
+        - Pagination uses keyset principles with page_token and page_size.
+        - Validation errors use BadRequest details; business-rule errors use ErrorInfo.
+        - Filters live inside request messages, grouped in a oneof.
+        - Avoid reserved words (`descriptor`, `private`) as field names.
+
+    - path: '**/Dockerfile*'
+      instructions: |
+        - Multi-stage builds; pin base images to a tag or digest, not :latest.
+        - Run as a non-root user in the final stage.
+        - Never copy .env or secrets into the image.
+        - Prefer COPY over ADD unless extracting archives.
+
+    - path: '**/.github/workflows/*.{yml,yaml}'
+      instructions: |
+        - Pin third-party actions to a SHA or version tag, never @latest.
+        - Use GitHub Secrets — no plaintext credentials.
+        - Apply least-privilege permissions: blocks.
+        - Flag any step that interpolates untrusted input directly into a shell
+          command (script-injection risk).
+
 chat:
   auto_reply: true
   art: false
+
 knowledge_base:
   learnings:
     scope: global
   code_guidelines:
     enabled: true
     filePatterns:
-    - README.md
-    - .golangci.yaml
-    - swagger.yaml
-    - Makefile
-    - docker-compose.yml
-    - .env.example
+      - README.md
+      - CONVENTIONS.md
+      - CLAUDE.md
+      - .golangci.yaml
