@@ -8,6 +8,9 @@ early_access: false
 
 reviews:
   profile: assertive
+  slop_detection:
+    enabled: true
+    label: "slop"
   request_changes_workflow: false
   high_level_summary: true
   review_status: true
